@@ -3,11 +3,13 @@
  USE sakila;
  
  CREATE VIEW view_customer_rental_info AS
-	SELECT c.customer_id, c.first_name, c.last_name, c.email, COUNT(r.rental_id) AS total_num_rentals 
+	SELECT c.customer_id, CONCAT(c.first_name, ' ', c.last_name) AS name, c.email, COUNT(r.rental_id) AS rental_count 
     FROM customer AS c
 	JOIN rental AS r
 	ON c.customer_id = r.customer_id
-	GROUP BY c.customer_id;
+	GROUP BY c.customer_id, c.first_name, c.last_name, c.email;
+
+SELECT * FROM view_customer_rental_info;
 
 -- 2. Create a Temporary Table that calculates the total amount paid by each customer (total_paid). 
 -- The Temporary Table should use the rental summary view created in Step 1 to join with the payment table and 
@@ -25,7 +27,7 @@ SELECT * FROM temp_tot_amount_paid;
 SElECT * FROM view_customer_rental_info;
 
 WITH cte_rental_payment_summary AS (
-	SELECT v.first_name, v.last_name, v.email, v.total_num_rentals, t.total_paid
+	SELECT v.name, v.email, v.rental_count, t.total_paid
 	FROM temp_tot_amount_paid AS t
 	JOIN view_customer_rental_info AS v
 	ON t.customer_id = v.customer_id)
@@ -36,11 +38,11 @@ SELECT * FROM cte_rental_payment_summary;
 -- from total_paid and rental_count.
 
 WITH cte_rental_payment_summary AS (
-	SELECT v.first_name, v.last_name, v.email, v.total_num_rentals, t.total_paid
+	SELECT v.name, v.email, v.rental_count, t.total_paid
 	FROM temp_tot_amount_paid AS t
 	JOIN view_customer_rental_info AS v
 	ON t.customer_id = v.customer_id)
-SELECT first_name, last_name, email, total_num_rentals, total_paid, total_paid / total_num_rentals AS average_payment_per_rental 
+SELECT name, email, rental_count, total_paid, total_paid / rental_count AS average_payment_per_rental 
 FROM cte_rental_payment_summary;
 
 
